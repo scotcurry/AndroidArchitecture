@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Android Architecture</string>
+    <string name="title_sdk">SDK</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+
+    <string name="textView_OSVersionLabel">OS Version</string>
+</resources>
