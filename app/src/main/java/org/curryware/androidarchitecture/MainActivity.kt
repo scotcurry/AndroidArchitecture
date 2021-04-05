@@ -7,14 +7,19 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.crittercism.app.Crittercism
 
 class MainActivity : AppCompatActivity() {
 
+    private val crittercismKey: String = "1c685e036e6642e79470399f96114ce200555300"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
+
+        Crittercism.initialize(this, crittercismKey)
+        Crittercism.leaveBreadcrumb("MainActivity - Starting App")
 
         val navController = findNavController(R.id.nav_host_fragment)
         // Passing each menu ID as a set of Ids because each

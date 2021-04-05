@@ -6,13 +6,13 @@ import okhttp3.Request
 import okhttp3.Response
 import java.util.*
 
-class HeaderInterceptor : Interceptor {
+class UEMHeaderInterceptor : Interceptor {
 
-    private val TAG: String = "HeaderInterceptor"
+    private val TAG: String = "UEMHeaderInterceptor"
 
     override fun intercept(chain: Interceptor.Chain): Response {
 
-        val authHeader = buildBasicHeader()
+        val authHeader = buildBasicUEMHeader()
 
         val request: Request = chain.request()
             .newBuilder()
@@ -25,7 +25,7 @@ class HeaderInterceptor : Interceptor {
         return chain.proceed(request)
     }
 
-    private fun buildBasicHeader(): String {
+    private fun buildBasicUEMHeader(): String {
 
         val userName = "td.scotcurry"
         val password = "AirWatch1"
