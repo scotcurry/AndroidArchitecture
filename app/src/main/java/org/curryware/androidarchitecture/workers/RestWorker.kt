@@ -1,11 +1,10 @@
 package org.curryware.androidarchitecture.workers
 
 import org.curryware.androidarchitecture.datamodels.AccessToken
-import org.curryware.androidarchitecture.datamodels.AccessUsers
+import org.curryware.androidarchitecture.datamodels.Access.AccessUsers
 import org.curryware.androidarchitecture.datamodels.UEMInfo
 import retrofit2.Response
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 

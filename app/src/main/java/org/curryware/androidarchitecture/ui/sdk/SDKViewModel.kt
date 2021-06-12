@@ -5,11 +5,12 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.curryware.androidarchitecture.BuildConfig
+import org.curryware.androidarchitecture.datamodels.Access.Resource
 import org.curryware.androidarchitecture.datamodels.AccessToken
 import org.curryware.androidarchitecture.datamodels.UEMInfo
-import org.curryware.androidarchitecture.repository.Repository
+import org.curryware.androidarchitecture.datamodels.ViewUser
+import org.curryware.androidarchitecture.repository.AccessRepository
 import retrofit2.Response
-import java.util.*
 import kotlin.collections.HashMap
 
 // This constructor can use a SavedStateHandle object.
@@ -17,11 +18,12 @@ import kotlin.collections.HashMap
 // for this is in the case of getting the UEM information, we could get it from a database, or a
 // REST API call.  We would call different Repository methods rather than coding them here.
 class SDKViewModel(
-    private val repository: Repository
+    private val repository: AccessRepository
 ) : ViewModel() {
 
     private val TAG: String = "SDKViewModel"
 
+    // These are the values that are shown in the SDKFragment
     // The concept here is that the private methods are used to call populate the data for
     // each of the LiveData elements.  This makes it easier to test those components.
 
@@ -46,22 +48,24 @@ class SDKViewModel(
     }
 
     val accessTokenInfo: MutableLiveData<Response<AccessToken>> = MutableLiveData()
+    val viewUsers: MutableLiveData<List<ViewUser>> = MutableLiveData()
+
+    // TODO:  This needs to be updated.  There is not value to getting the Access Token.  Every
+    // call is made needs to get the token, so this should be changed to just
     fun getAccessToken() {
 
-        val clientID: String = "Zero_Day_Token"
-        val clientToken: String = "CTOpIVfg7sMJiNtSzdMZTHDMXXNGluv8mTo0NMgoF6PGXtqR"
-        val stringToConvert: String = ("$clientID:$clientToken")
-
+        // This is the key documentation to how to work with calls that you need the results for.
+        //  You first do the launch as the line below shows.  Once in this block you can run the
+        // calls with the async....await() function.  This means before you run the next line wait
+        // for this line to finish.
+        // https://developer.android.com/kotlin/coroutines/coroutines-adv#start
         viewModelScope.launch {
 
-            val getTokenHeaderMap = HashMap<String, String>()
-            getTokenHeaderMap["Authorization"] = buildBasicAccessHeader()
-            getTokenHeaderMap["Content-Type"] = "application/json"
-            getTokenHeaderMap["Accept"] = "application/json"
-            val access_token_payload = async { repository.getAccessToken(getTokenHeaderMap) }.await()
+            val access_token_payload = async { repository.getAccessToken() }.await()
+            // var userList: List<ViewUser>? = null
 
             if (access_token_payload.isSuccessful) {
-                val accessToken = access_token_payload.body()?.access_token!!
+                val accessToken = access_token_payload.body()?.access_token
                 Log.i(TAG, "Access Token: $accessToken")
                 val headerMap = HashMap<String, String>()
                 headerMap["Authorization"] = "HZN $accessToken"
@@ -72,28 +76,32 @@ class SDKViewModel(
                 }
                 val getAccessUsers = async { repository.getAccessUsers(headerMap) }.await()
                 if (getAccessUsers.isSuccessful) {
+                    val allUsers = getAccessUsers.body()?.Resources
+                    val viewUsersToAdd = mutableListOf<ViewUser>()
                     Log.i(TAG, "Got Some Users")
+                    if (allUsers != null) {
+                        for (currentUser: Resource in allUsers) {
+                            val userName = currentUser.userName
+                            val title = currentUser.title
+                            val emailAddress = currentUser.emails[0].value
+                            val firstName = currentUser.name.givenName
+                            val lastName = currentUser.name.familyName
+                            val fullName = "$firstName $lastName"
+                            val viewUser = ViewUser(userName, fullName, emailAddress, title)
+                            viewUsersToAdd.add(viewUser)
+                        }
+                        // userList = viewUsersToAdd
+                    }
                 } else {
                     val returnCode = getAccessUsers.code().toString()
                     val debug = getAccessUsers.message()
                     val more_debug = getAccessUsers.errorBody()
-                    Log.e(TAG, "Had an Issue - Return: $returnCode, Message: $debug")
+                    Log.e(TAG, "Had an Issue - Return: $returnCode, Message: $debug, Extended Error: $more_debug")
                 }
 
             }
+            // viewUsers.value = userList
             accessTokenInfo.value = access_token_payload
         }
-    }
-
-    private fun buildBasicAccessHeader(): String {
-
-        val clientID = "Zero_Day_Token"
-        val clientToken = "CTOpIVfg7sMJiNtSzdMZTHDMXXNGluv8mTo0NMgoF6PGXtqR"
-
-        val stringToConvert = "$clientID:$clientToken"
-        val base64String: String = Base64.getEncoder().encodeToString(stringToConvert.toByteArray())
-        val authString = "Basic $base64String"
-        Log.d(TAG, authString)
-        return authString
     }
 }
