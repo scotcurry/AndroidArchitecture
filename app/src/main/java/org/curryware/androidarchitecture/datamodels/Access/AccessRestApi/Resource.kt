@@ -1,4 +1,4 @@
-package org.curryware.androidarchitecture.datamodels.Access
+package org.curryware.androidarchitecture.datamodels.Access.AccessRestApi
 
 data class Resource(
     val active: Boolean,

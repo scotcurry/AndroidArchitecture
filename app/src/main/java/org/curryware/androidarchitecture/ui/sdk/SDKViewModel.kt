@@ -5,13 +5,11 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.curryware.androidarchitecture.BuildConfig
-import org.curryware.androidarchitecture.datamodels.Access.Resource
-import org.curryware.androidarchitecture.datamodels.AccessToken
+import org.curryware.androidarchitecture.datamodels.Access.AccessRestApi.AccessToken
 import org.curryware.androidarchitecture.datamodels.UEMInfo
-import org.curryware.androidarchitecture.datamodels.ViewUser
+import org.curryware.androidarchitecture.datamodels.Access.AccessRestApi.AccessUser
 import org.curryware.androidarchitecture.repository.AccessRepository
 import retrofit2.Response
-import kotlin.collections.HashMap
 
 // This constructor can use a SavedStateHandle object.
 // The repository class is the layer of abstraction between the workers and this class.  The reason
@@ -48,7 +46,7 @@ class SDKViewModel(
     }
 
     val accessTokenInfo: MutableLiveData<Response<AccessToken>> = MutableLiveData()
-    val viewUsers: MutableLiveData<List<ViewUser>> = MutableLiveData()
+    val viewUsers: MutableLiveData<List<AccessUser>> = MutableLiveData()
 
     // TODO:  This needs to be updated.  There is not value to getting the Access Token.  Every
     // call is made needs to get the token, so this should be changed to just
@@ -61,47 +59,47 @@ class SDKViewModel(
         // https://developer.android.com/kotlin/coroutines/coroutines-adv#start
         viewModelScope.launch {
 
-            val access_token_payload = async { repository.getAccessToken() }.await()
+            val accessTokenPayload = async { repository.getAccessToken() }.await()
             // var userList: List<ViewUser>? = null
 
-            if (access_token_payload.isSuccessful) {
-                val accessToken = access_token_payload.body()?.access_token
+            if (accessTokenPayload.isSuccessful) {
+                val accessToken = accessTokenPayload.body()?.access_token
                 Log.i(TAG, "Access Token: $accessToken")
-                val headerMap = HashMap<String, String>()
-                headerMap["Authorization"] = "HZN $accessToken"
-                headerMap["Content-Type"] = "application/json"
-                headerMap["Accept"] = "application/json"
-                for((key, value) in headerMap) {
-                    Log.i(TAG, "Key: $key - Value: $value")
-                }
-                val getAccessUsers = async { repository.getAccessUsers(headerMap) }.await()
-                if (getAccessUsers.isSuccessful) {
-                    val allUsers = getAccessUsers.body()?.Resources
-                    val viewUsersToAdd = mutableListOf<ViewUser>()
-                    Log.i(TAG, "Got Some Users")
-                    if (allUsers != null) {
-                        for (currentUser: Resource in allUsers) {
-                            val userName = currentUser.userName
-                            val title = currentUser.title
-                            val emailAddress = currentUser.emails[0].value
-                            val firstName = currentUser.name.givenName
-                            val lastName = currentUser.name.familyName
-                            val fullName = "$firstName $lastName"
-                            val viewUser = ViewUser(userName, fullName, emailAddress, title)
-                            viewUsersToAdd.add(viewUser)
-                        }
-                        // userList = viewUsersToAdd
-                    }
-                } else {
-                    val returnCode = getAccessUsers.code().toString()
-                    val debug = getAccessUsers.message()
-                    val more_debug = getAccessUsers.errorBody()
-                    Log.e(TAG, "Had an Issue - Return: $returnCode, Message: $debug, Extended Error: $more_debug")
-                }
+                // val headerMap = HashMap<String, String>()
+                // headerMap["Authorization"] = "HZN $accessToken"
+                // headerMap["Content-Type"] = "application/json"
+                // headerMap["Accept"] = "application/json"
+                // for((key, value) in headerMap) {
+                //    Log.i(TAG, "Key: $key - Value: $value")
+                // }
+                val getAccessUsers = async { repository.getAccessUsers(accessToken) }.await()
+//                if (getAccessUsers.isSuccessful) {
+//                    val allUsers = getAccessUsers.body()?.Resources
+//                    val viewUsersToAdd = mutableListOf<AccessUser>()
+//                    Log.i(TAG, "Got Some Users")
+//                    if (allUsers != null) {
+//                        for (currentUser: Resource in allUsers) {
+//                            val userName = currentUser.userName
+//                            val title = currentUser.title
+//                            val emailAddress = currentUser.emails[0].value
+//                            val firstName = currentUser.name.givenName
+//                            val lastName = currentUser.name.familyName
+//                            val fullName = "$firstName $lastName"
+//                            val viewUser = AccessUser(userName, fullName, emailAddress, title)
+//                            viewUsersToAdd.add(viewUser)
+//                        }
+//                        // userList = viewUsersToAdd
+//                    }
+//                } else {
+//                    val returnCode = getAccessUsers.code().toString()
+//                    val debug = getAccessUsers.message()
+//                    val more_debug = getAccessUsers.errorBody()
+//                    Log.e(TAG, "Had an Issue - Return: $returnCode, Message: $debug, Extended Error: $more_debug")
+//                }
 
             }
             // viewUsers.value = userList
-            accessTokenInfo.value = access_token_payload
+            accessTokenInfo.value = accessTokenPayload
         }
     }
 }

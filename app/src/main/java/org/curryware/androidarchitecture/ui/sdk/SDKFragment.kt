@@ -65,7 +65,7 @@ class SDKFragment : Fragment() {
         // val sdkViewModel = ViewModelProvider(this, viewModelFactory).get(SDKViewModel::class.java)
         // Now that we actually have a ViewModel, we need to do som "stuff" to populate the UI.
         // sdkViewModel.getUEMInfo()
-        Log.i(TAG, "Getting Ready To Make Network Calls")
+        Log.d(TAG, "Getting Ready To Make Network Calls")
         Crittercism.leaveBreadcrumb("Hitting Init Retrofit Button")
 
         sdkViewModel.uemInfoResponse.observe(viewLifecycleOwner, { response ->

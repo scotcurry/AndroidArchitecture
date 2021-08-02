@@ -1,6 +1,6 @@
 package org.curryware.androidarchitecture.datamodels
 
-data class ViewUser(
+data class AccessUserForView (
 
     var userName: String?,
     var fullName: String?,

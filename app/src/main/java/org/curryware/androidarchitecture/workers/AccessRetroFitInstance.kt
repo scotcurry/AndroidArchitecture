@@ -10,11 +10,11 @@ object AccessRetroFitInstance {
 
     private fun buildInstrumentedClient(): OkHttpClient {
 
-        val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+        // val logging = HttpLoggingInterceptor()
+        // logging.setLevel(HttpLoggingInterceptor.Level.NONE)
 
         val clientBuilder: OkHttpClient.Builder = OkHttpClient.Builder()
-        clientBuilder.addInterceptor(logging)
+        // clientBuilder.addInterceptor(logging)
         val client = clientBuilder.build()
 
         return Crittercism.getNetworkInstrumentation()
