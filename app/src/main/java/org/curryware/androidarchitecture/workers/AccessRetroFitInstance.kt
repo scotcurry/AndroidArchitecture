@@ -6,6 +6,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+// This and the UEM Retrofit Instance are classes that wrap the Retrofit stuff.  I believe
+// it is restworker that gets called.
 object AccessRetroFitInstance {
 
     private fun buildInstrumentedClient(): OkHttpClient {

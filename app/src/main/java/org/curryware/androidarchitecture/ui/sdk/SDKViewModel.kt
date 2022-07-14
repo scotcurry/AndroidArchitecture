@@ -8,6 +8,7 @@ import org.curryware.androidarchitecture.BuildConfig
 import org.curryware.androidarchitecture.datamodels.Access.AccessRestApi.AccessToken
 import org.curryware.androidarchitecture.datamodels.UEMInfo
 import org.curryware.androidarchitecture.datamodels.Access.AccessRestApi.AccessUser
+import org.curryware.androidarchitecture.datamodels.AccessUserForView
 import org.curryware.androidarchitecture.repository.AccessRepository
 import retrofit2.Response
 
@@ -20,6 +21,7 @@ class SDKViewModel(
 ) : ViewModel() {
 
     private val TAG: String = "SDKViewModel"
+    private var accessToken: String? = ""
 
     // These are the values that are shown in the SDKFragment
     // The concept here is that the private methods are used to call populate the data for
@@ -46,59 +48,60 @@ class SDKViewModel(
     }
 
     val accessTokenInfo: MutableLiveData<Response<AccessToken>> = MutableLiveData()
-    val viewUsers: MutableLiveData<List<AccessUser>> = MutableLiveData()
 
     // TODO:  This needs to be updated.  There is not value to getting the Access Token.  Every
     // call is made needs to get the token, so this should be changed to just
     fun getAccessToken() {
 
         // This is the key documentation to how to work with calls that you need the results for.
-        //  You first do the launch as the line below shows.  Once in this block you can run the
+        // You first do the launch as the line below shows.  Once in this block you can run the
         // calls with the async....await() function.  This means before you run the next line wait
         // for this line to finish.
         // https://developer.android.com/kotlin/coroutines/coroutines-adv#start
+
+        // viewModelScope is defined in an android.lifecycle namespace.  Launch is the concept of
+        // structured concurrency https://kotlinlang.org/docs/coroutines-basics.html#structured-concurrency
+        // meaning that this launch can't "finish" until all child coroutines finish.
         viewModelScope.launch {
 
+            // TODO: Need to figure out how to handle errors at this point of the code.
             val accessTokenPayload = async { repository.getAccessToken() }.await()
-            // var userList: List<ViewUser>? = null
 
+            var allAccessUsers = mutableListOf<AccessUserForView>()
             if (accessTokenPayload.isSuccessful) {
-                val accessToken = accessTokenPayload.body()?.access_token
+                accessToken = accessTokenPayload.body()?.access_token
                 Log.i(TAG, "Access Token: $accessToken")
-                // val headerMap = HashMap<String, String>()
-                // headerMap["Authorization"] = "HZN $accessToken"
-                // headerMap["Content-Type"] = "application/json"
-                // headerMap["Accept"] = "application/json"
-                // for((key, value) in headerMap) {
-                //    Log.i(TAG, "Key: $key - Value: $value")
-                // }
-                val getAccessUsers = async { repository.getAccessUsers(accessToken) }.await()
-//                if (getAccessUsers.isSuccessful) {
-//                    val allUsers = getAccessUsers.body()?.Resources
-//                    val viewUsersToAdd = mutableListOf<AccessUser>()
-//                    Log.i(TAG, "Got Some Users")
-//                    if (allUsers != null) {
-//                        for (currentUser: Resource in allUsers) {
-//                            val userName = currentUser.userName
-//                            val title = currentUser.title
-//                            val emailAddress = currentUser.emails[0].value
-//                            val firstName = currentUser.name.givenName
-//                            val lastName = currentUser.name.familyName
-//                            val fullName = "$firstName $lastName"
-//                            val viewUser = AccessUser(userName, fullName, emailAddress, title)
-//                            viewUsersToAdd.add(viewUser)
-//                        }
-//                        // userList = viewUsersToAdd
-//                    }
-//                } else {
-//                    val returnCode = getAccessUsers.code().toString()
-//                    val debug = getAccessUsers.message()
-//                    val more_debug = getAccessUsers.errorBody()
-//                    Log.e(TAG, "Had an Issue - Return: $returnCode, Message: $debug, Extended Error: $more_debug")
-//                }
+                val headerMap = HashMap<String, String>()
+                headerMap["Authorization"] = "HZN $accessToken"
+                headerMap["Content-Type"] = "application/json"
+                headerMap["Accept"] = "application/json"
 
+                // This is part of the point above that the viewModelScope can't complete until
+                // this coroutines is complete as well.
+                val getAccessUsers = async { repository.getAccessUsers(accessToken) }.await()
+
+                // Now we have an access token, so we can go get the users.
+                if (getAccessUsers.isSuccessful) {
+                    Log.i(TAG, "Success Getting Users!")
+                } else {
+                    Log.e(TAG, "Failure Getting Users!")
+                }
+                if (getAccessUsers.isSuccessful) {
+                    val allUsers = getAccessUsers.body()?.Resources
+                    if (allUsers != null) {
+                        for (currentUser in allUsers!!) {
+                            val firstName = currentUser.name.givenName
+                            val lastName = currentUser.name.familyName
+                            val accessName = "$firstName $lastName"
+                            val userName = currentUser.userName
+                            val title = currentUser.title
+                            val userToAddToList = AccessUserForView(userName, accessName, null, title)
+                            allAccessUsers.add(userToAddToList)
+                            Log.i(TAG, "Username: $userName")
+                        }
+                    }
+                }
             }
-            // viewUsers.value = userList
             accessTokenInfo.value = accessTokenPayload
         }
     }

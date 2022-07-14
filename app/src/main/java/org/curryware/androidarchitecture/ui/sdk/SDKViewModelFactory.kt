@@ -9,7 +9,7 @@ import org.curryware.androidarchitecture.repository.AccessRepository
 // use the ViewModelProviders.of syntax.
 class SDKViewModelFactory(private val repository: AccessRepository)
     : ViewModelProvider.Factory {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T{
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return SDKViewModel(repository) as T
     }
 }

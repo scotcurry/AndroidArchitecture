@@ -68,22 +68,22 @@ class SDKFragment : Fragment() {
         Log.d(TAG, "Getting Ready To Make Network Calls")
         Crittercism.leaveBreadcrumb("Hitting Init Retrofit Button")
 
-        sdkViewModel.uemInfoResponse.observe(viewLifecycleOwner, { response ->
+        sdkViewModel.uemInfoResponse.observe(viewLifecycleOwner) { response ->
             if (response.isSuccessful) {
-                Log.d(TAG, "Product Version: "+ response.body()?.productVersion!!)
+                Log.d(TAG, "Product Version: " + response.body()?.productVersion!!)
                 Log.d(TAG, "Product Name: " + response.body()?.productName!!)
             } else {
                 Log.e(TAG, "Error Getting Product Info: " + response.message())
             }
-        })
+        }
 
         sdkViewModel.getAccessToken()
-        sdkViewModel.accessTokenInfo.observe(viewLifecycleOwner, { response ->
+        sdkViewModel.accessTokenInfo.observe(viewLifecycleOwner) { response ->
             if (response.isSuccessful) {
                 Log.d(TAG, "Scope: " + response.body()?.scope!!)
             } else {
                 Log.e(TAG, "Error Getting Access Token: " + response.message())
             }
-        })
+        }
     }
 }
